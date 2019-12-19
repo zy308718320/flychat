@@ -8,6 +8,10 @@ function messageList (param) {
   return request.get('node/chats/messageList', param)
 }
 
+function addChats (param) {
+  return request.post('node/chats/addChats', param)
+}
+
 function chatList (param) {
   return request.get('node/chats/chatList', param)
 }
@@ -15,5 +19,6 @@ function chatList (param) {
 export default {
   sendMessage,
   messageList,
-  chatList
+  chatList,
+  addChats
 }

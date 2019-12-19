@@ -1,11 +1,9 @@
 import { Document } from 'mongoose';
 
 export interface Chats extends Document {
+  _id: any;
   uid: string;
-  fid: string;
-  portrait: string;
-  nickname: string;
-  content: string;
+  chatList: [],
   create_at: number;
   update_at: number;
 }

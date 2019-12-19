@@ -13,8 +13,8 @@ export class UsersService {
 
   async create(createUserDto): Promise<Users> {
     createUserDto.password = crypto.MD5(createUserDto.password).toString();
-    const user = this.usersModel.findOne({ username: createUserDto.username });
-    if (Object.keys(user).length <= 0) {
+    const user = await this.usersModel.findOne({ username: createUserDto.username });
+    if (!user || Object.keys(user).length <= 0) {
       createUserDto.create_at = +new Date();
       const createdCat = new this.usersModel(createUserDto);
       return await createdCat.save();

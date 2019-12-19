@@ -1,17 +1,20 @@
 <template>
   <div class="left-chat-list-tab-wrap">
-    <div v-for="(chat, index) in chats" :key="'chat' + index" class="chat-wrap" :class="{ 'chat-wrap-top': chat.isOnTop, 'chat-wrap-selected': currentChatIndex === index }" @click="handleChangeChat(index)">
+    <div v-for="(chat, index) in chatList"
+         :key="index" class="chat-wrap"
+         :class="{ 'chat-wrap-top': chat.isOnTop, 'chat-wrap-selected': currentChatIndex === index }"
+         @click="handleChangeChat(index)">
       <div class="chat-avatar">
         <img style="width: 40px; height: 40px; border-radius: 2px;" :src="chat.avatar" />
       </div>
       <div class="chat-msg">
         <div class="chat-msg-nickname">{{ chat.nickname }}</div>
-        <pre class="chat-msg-message" v-html="chat.messages.length === 0 ? '' : chat.messages[chat.messages.length-1].ctn"></pre>
+        <pre class="chat-msg-message" v-html="chat.ctn" />
       </div>
       <div class="chat-info">
-        <span class="chat-info-time" :style="{ color: currentChatIndex === index ? '#fff' : ''}">{{ chat.messages.length === 0 ? '' : getTime(chat.messages[chat.messages.length - 1].time) }}</span>
+        <span class="chat-info-time" :style="{ color: currentChatIndex === index ? '#fff' : ''}">{{ getTime(chat.time) }}</span>
         <div class="chat-info-icon-wrap" v-if="chat.isMute">
-          <i :class="`icon ${currentChatIndex === index ? 'icon-mute-light' : 'icon-mute-dark' }`"></i>
+          <i :class="`icon ${currentChatIndex === index ? 'icon-mute-light' : 'icon-mute-dark' }`" />
         </div>
       </div>
     </div>
@@ -19,19 +22,18 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
+import chats from '../../../../../apis/chats'
 
 export default {
   name: 'TabChat',
   data () {
-    return {}
+    return {
+      chatList: []
+    }
   },
   computed: {
-    chats () {
-      return this.$store.state.chats
-        .sort((a) => {
-          return a.isOnTop ? -1 : 0
-        })
-    },
+    ...mapGetters(['chats']),
     currentChatIndex () {
       let index = -1
       for (let i = 0; i < this.chats.length; i++) {
@@ -42,16 +44,49 @@ export default {
       return index
     }
   },
+  watch: {
+    chats (val) {
+      this.chatList = val.slice().sort((a) => {
+        return a.isOnTop ? -1 : 0
+      })
+    }
+  },
   methods: {
-    handleChangeChat (index) {
+    handleChangeChat: async function (index) {
       this.$store.commit('setChatId', this.chats[index].chatId)
+      const ret = await chats.messageList({
+        fid: this.$store.state.currentChatId
+      })
+      let messageList = ret.data
+      const lastMessage = messageList[messageList.length - 1]
+      if (lastMessage) {
+        this.$store.commit('updateChat', lastMessage)
+        messageList = messageList.map(item => {
+          return {
+            type: 'chat',
+            sender: item.uid,
+            nickname: item.nickname,
+            avatar: item.avatar,
+            time: item.create_at,
+            ctn: item.content
+          }
+        })
+        this.$store.commit('setMessageList', messageList)
+        this.$nextTick(() => {
+          const content = document.querySelector('#content')
+          content.scrollTop = content.scrollHeight
+        })
+      }
     },
     getTime (time) {
-      const d = time
+      const d = time ? new Date(time) : new Date()
       const h = d.getHours() < 10 ? '0' + d.getHours() : d.getHours()
       const m = d.getMinutes() < 10 ? '0' + d.getMinutes() : d.getMinutes()
       return `${h}:${m}`
     }
+  },
+  created () {
+    this.$eventBus.$on('changeChat', this.handleChangeChat)
   }
 }
 </script>

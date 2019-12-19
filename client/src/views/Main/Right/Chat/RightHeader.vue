@@ -35,18 +35,7 @@ function getLinkman (ctx) {
   if (currentChatId === '') {
     return null
   }
-
-  const chats = state.chats
-
-  let linkmanIndex = state.chats[currentChatId]
-  for (let chat of chats) {
-    if (chat.chatId === currentChatId) {
-      linkmanIndex = chat.linkmanIndex
-      break
-    }
-  }
-  let linkman = state.linkmans[linkmanIndex]
-  return linkman
+  return state.linkmans.find(item => item.id === currentChatId)
 }
 
 export default {

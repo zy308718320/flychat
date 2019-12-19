@@ -203,7 +203,7 @@ export default {
       const chat = await chats.sendMessage({ fid: currentChatId, content: ctn })
       this.$store.commit('sendMessage', {
         type: 'chat',
-        time: new Date(chat.data.create_at),
+        time: chat.data.create_at,
         sender: myself.id,
         nickname: myself.nickname,
         avatar: myself.avatar,

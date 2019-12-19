@@ -4,6 +4,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { ChatsService } from './service';
 import { MessageListDto } from './dto/message-list';
 import { AddMessageDto } from './dto/add-message';
+import { AddChatsDto } from './dto/add-chats';
 
 @UseGuards(AuthGuard('jwt'))
 @ApiBearerAuth()
@@ -12,6 +13,11 @@ export class ChatsController {
   constructor(
     private readonly chatsService: ChatsService,
   ) {}
+
+  @Post('addChats')
+  addChats(@Request() req, @Body() addChatsDto: AddChatsDto) {
+    return this.chatsService.addChats(req.user.uid, addChatsDto);
+  }
 
   @Get('chatList')
   chatList(@Request() req) {

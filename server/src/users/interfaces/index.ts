@@ -1,6 +1,7 @@
 import {Document} from 'mongoose';
 
 export interface Users extends Document {
+  _id: any;
   nickname: string;
   portrait: string;
   username: string;

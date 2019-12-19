@@ -50,7 +50,7 @@ export default {
     message: function (data) {
       this.$store.commit('sendMessage', {
         type: 'chat',
-        time: new Date(data.create_at),
+        time: data.create_at,
         sender: data.uid,
         nickname: data.nickname,
         avatar: data.avatar,
@@ -114,6 +114,9 @@ export default {
     async online (clientId) {
       await users.online({ clientId })
     },
+    async offline () {
+      await users.offline()
+    },
     async getFriendList () {
       const rst = await frients.friendList()
       const data = rst.data
@@ -127,37 +130,30 @@ export default {
       }
     },
     async getChatList () {
-      const rst = await chats.chatList()
-      const data = rst.data
+      const res = await chats.chatList()
+      const data = res.data
       if (data) {
         let chatList = []
-        data.forEach(item => {
-          const { id, content, fid, nickname, portrait, create_at } = item
+        data.chatList.forEach(item => {
+          const { content, fid, nickname, portrait, time } = item
           chatList.push({
             chatId: fid,
             isMute: false,
-            isOnTop:false,
-            linkmanIndex: 0,
-            messages: [{
-              nickname,
-              ctn: content,
-              avatar: portrait,
-              sender: fid,
-              time: new Date(create_at),
-              type: 'chat'
-            }]
+            isOnTop: false,
+            nickname,
+            ctn: content,
+            avatar: portrait,
+            time
           })
         })
         this.$store.commit('setChatList', chatList)
       }
     }
   },
-  mounted () {
-  },
   created () {
     this.getUserInfo()
     this.getFriendList()
-    // this.getChatList()
+    this.getChatList()
     this.$eventBus.$on('setClientId', (clientId) => {
       this.online(clientId)
     })

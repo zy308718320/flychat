@@ -19,13 +19,7 @@ export class ChatsService {
   }
 
   async getChatList(uid: string) {
-    const chats = await this.chatsModel.find({ uid });
-    const chatList = [];
-    chats.forEach(item => {
-      const { _id, fid, portrait, nickname, content, create_at } = item;
-      chatList.push({ id: _id, fid, portrait, nickname, content, create_at });
-    });
-    return chatList;
+    return await this.chatsModel.findOne({ uid });
   }
 
   async getMessageList(id: string, fid: string) {
@@ -37,11 +31,11 @@ export class ChatsService {
     });
     const messageList = [];
     const messageQ = [];
-    messages.forEach(async (item) => {
-      const { uid, content, create_at } = item;
+    for (const item of messages) {
+      const { uid, content, create_at, update_at } = item;
       messageQ.push(this.usersModel.findById(uid));
-      messageList.push({ uid, content, create_at });
-    });
+      messageList.push({ uid, content, create_at, update_at });
+    }
     return Promise.all(messageQ).then((userList) => {
       userList.forEach((item, i) => {
         const { nickname, portrait } = item;
@@ -52,15 +46,18 @@ export class ChatsService {
     });
   }
 
-  async addChat(uid: string, addChatDto) {
-    const chat = await this.chatsModel.findOne({ $and: [{ fid: addChatDto.fid }, { uid }] });
-    if (!chat || Object.keys(chat).length <= 0) {
-      addChatDto.uid = uid;
-      const createdCat = new this.chatsModel(addChatDto);
-      return await createdCat.save();
+  async addChats(uid: string, addChatsDto) {
+    const nowDate = +new Date();
+    addChatsDto.update_at = nowDate;
+    const chats = await this.chatsModel.findOne({ uid });
+    if (!chats || Object.keys(chats).length <= 0) {
+      addChatsDto.uid = uid;
+      addChatsDto.create_at = nowDate;
+      const createdCat = new this.chatsModel(addChatsDto);
+      return createdCat.save();
     } else {
       return await this.chatsModel.update({uid},
-        {content: addChatDto.content, update_at: addChatDto.update_at}
+        {chatList: addChatsDto.chatList}
       );
     }
   }
@@ -68,6 +65,8 @@ export class ChatsService {
   async addMessage(user, addMessageDto) {
     const nowDate = +new Date();
     addMessageDto.uid = user.uid;
+    addMessageDto.create_at = nowDate;
+    addMessageDto.update_at = nowDate;
     const friend = await this.usersModel.findById(addMessageDto.fid);
     if (friend.status === 1 && friend.clientId !== '') {
       // 在线状态
@@ -84,15 +83,7 @@ export class ChatsService {
     } else {
       addMessageDto.status = 0;
     }
-    await this.addChat(user.uid, {
-      fid: addMessageDto.fid,
-      portrait: friend.portrait,
-      nickname: friend.nickname,
-      content: addMessageDto.content,
-      create_at: nowDate,
-      update_at: nowDate
-    });
     const addMessage = new this.messagesModel(addMessageDto);
-    return await addMessage.save();
+    return addMessage.save();
   }
 }

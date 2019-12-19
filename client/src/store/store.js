@@ -1,9 +1,10 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import chats from '../apis/chats'
 
 // import avatar from '../assets/default.png'
 // import group from '../assets/default_group.png'
-import user from '../assets/user.jpeg'
+// import user from '../assets/user.jpeg'
 
 Vue.use(Vuex)
 
@@ -20,29 +21,22 @@ const store = new Vuex.Store({
     currentRight: 0,
     currentLinkman: 0,
     myself: {
-      id: 'p0',
-      avatar: user,
-      nickname: '你自己',
-      gender: '',
-      alias: '',
-      region: ''
+      // id: 'p0',
+      // avatar: user,
+      // nickname: '你自己',
+      // gender: '',
+      // alias: '',
+      // region: ''
     },
     chats: [
       // {
       //   chatId: 0,
-      //   linkmanIndex: 1,
       //   isMute: false,
       //   isOnTop: false,
-      //   messages: [
-      //     {
-      //       avatar,
-      //       ctn: '你好',
-      //       nickname: '用户一',
-      //       sender: 'p1',
-      //       time: new Date('2011-01-11 11:11:11'),
-      //       type: 'chat'
-      //     }
-      //   ]
+      //   avatar
+      //   nickname: ''
+      //   ctn: ''
+      //   time: '2011-01-11 11:11:11'
       // }
     ],
     linkmans: [
@@ -75,7 +69,20 @@ const store = new Vuex.Store({
       //   avatar
       // }
     ],
+    messages: [
+      // {
+      //   type: 'chat',
+      //   sender: item.uid,
+      //   nickname: item.nickname,
+      //   avatar: item.avatar,
+      //   time: new item.create_at,
+      //   ctn: item.content
+      // }
+    ],
     currentChatId: ''
+  },
+  getters: {
+    chats: state => state.chats
   },
   mutations: {
     setExpression (state, isShowExpression) {
@@ -141,53 +148,90 @@ const store = new Vuex.Store({
       state.isShowSearch = isShowSearch
     },
     sendMessage (state, msg) {
-      for (let chat of state.chats) {
-        if (chat.chatId === state.currentChatId) {
-          chat.messages.push(msg)
-          break
-        }
+      // todo 接收消息需要调整chats列表顺序
+      if (state.myself.id === msg.sender) {
+        // 自己发出去的
+        state.messages.push(msg)
+        this.commit('updateChat', msg)
+      } else if (state.chats.find(item => item.chatId === msg.sender)) {
+        // 对话列表存在的人发送过来的
+        state.chats.forEach(item => {
+          if (item.chatId === msg.sender) {
+            item.time = msg.time || msg.create_at || 0
+            item.ctn = msg.ctn || msg.content
+          }
+        })
+      } else {
+        // 对话列表不存在的人发送过来的
+        state.chats = [{
+          chatId: msg.sender,
+          nickname: msg.nickname,
+          avatar: msg.avatar,
+          isMute: false,
+          isOnTop: false,
+          ctn: msg.ctn,
+          time: msg.time
+        }].concat(state.chats)
+        state.currentChatId = msg.sender
       }
     },
-    sendMessageList (state, msgList) {
-      for (let chat of state.chats) {
-        if (chat.chatId === state.currentChatId) {
-          chat.messages = msgList
-          break
-        }
-      }
+    setMessageList (state, msgList) {
+      state.messages = msgList
     },
     setMyself (state, obj) {
-      state.myself = Object.assign(state.myself, obj)
+      state.myself = obj
     },
     setFriendList (state, obj) {
-      state.linkmans = Object.assign(state.linkmans, obj)
+      state.linkmans = obj.concat(state.linkmans)
     },
     setChatList (state, obj) {
-      state.chats = Object.assign(state.chats, obj)
+      state.chats = obj.concat(state.chats)
     },
     addChat (state, linkmanIndex) {
+      const { id, nickname, avatar } = state.linkmans[linkmanIndex]
       state.currentTabIndex = 0
       state.currentRight = 0
       for (let i = 0; i < state.chats.length; i++) {
         let chat = state.chats[i]
-        if (chat.linkmanIndex === linkmanIndex) {
+        if (chat.chatId === id) {
           state.chats.splice(i, 1)
           state.chats = [chat].concat(state.chats)
           state.currentChatId = chat.chatId
           return
         }
       }
-      const chatId = state.linkmans[linkmanIndex].id
       state.chats = [{
-        linkmanIndex,
-        chatId,
+        chatId: id,
+        nickname,
+        avatar,
         isMute: false,
-        isOnTop: false,
-        messages: []
+        isOnTop: false
       }].concat(state.chats)
-      state.currentChatId = chatId
+      state.currentChatId = id
+    },
+    async updateChat (state, obj) {
+      state.chats = state.chats.map(item => {
+        if (item.chatId === state.currentChatId) {
+          item.time = obj.time || obj.create_at || 0
+          item.ctn = obj.ctn || obj.content
+        }
+        return item
+      })
+      let chatList = state.chats
+      chatList = chatList.map(item => {
+        return {
+          content: item.ctn,
+          fid: item.chatId,
+          nickname: item.nickname,
+          portrait: item.avatar,
+          time: item.time
+        }
+      })
+      await chats.addChats({
+        chatList
+      })
     }
-  },
+  }
 })
 
 export default store

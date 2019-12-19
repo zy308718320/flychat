@@ -2,7 +2,12 @@
   <div class="left-chat-list-tab-wrap">
     <div v-for="(kind, index) in kinds" :key="'kind' + index">
       <div class="kind-title">{{ kind.title }}</div>
-      <div v-for="(linkman, lIndex) in kind.linkmans" :key="'linkman' + lIndex" class="wrap" :class="{ 'wrap-selected': currentLinkman === 'k'+index+'l'+lIndex }" @click="handleShowDetail(index, lIndex)" @dblclick="handleNewChat(index, lIndex)">
+      <div v-for="(linkman, lIndex) in kind.linkmans"
+           :key="lIndex"
+           class="wrap"
+           :class="{ 'wrap-selected': currentLinkman === 'k'+index+'l'+lIndex }"
+           @click="handleShowDetail(index, lIndex)"
+           @dblclick="handleNewChat(index, lIndex)">
         <div class="avatar-wrap">
           <img class="avatar" :src="linkman.avatar" />
         </div>
@@ -13,7 +18,6 @@
 </template>
 
 <script>
-import chats from '../../../../../apis/chats'
 
 export default {
   name: 'TabChat',
@@ -47,7 +51,6 @@ export default {
     handleShowDetail (kindIndex, lIndex) {
       this.currentLinkman = 'k' + kindIndex + 'l' + lIndex
       const id = this.kinds[kindIndex].linkmans[lIndex].id
-
       const linkmans = this.$store.state.linkmans
       this.$store.commit('setCurrentRight', 1)
       for (let i = 0; i < linkmans.length; i++) {
@@ -62,26 +65,7 @@ export default {
         const linkman = this.$store.state.linkmans[i]
         if (linkman.id === this.kinds[kindIndex].linkmans[lIndex].id) {
           this.$store.commit('addChat', i)
-          const ret = await chats.messageList({
-            fid: this.$store.state.currentChatId
-          })
-          const chatList = ret.data
-          const messageList = []
-          chatList.forEach(item => {
-            messageList.push({
-              type: 'chat',
-              time: new Date(item.create_at),
-              sender: item.uid,
-              nickname: item.nickname,
-              avatar: item.avatar,
-              ctn: item.content
-            })
-          })
-          this.$store.commit('sendMessageList', messageList)
-          this.$nextTick(() => {
-            const content = document.querySelector('#content')
-            content.scrollTop = content.scrollHeight
-          })
+          this.$eventBus.$emit('changeChat', 0)
         }
       }
     }

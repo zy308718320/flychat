@@ -16,7 +16,9 @@
               <div class="msg-right-wrap">
                 <pre class="msg-ctn" style="background-color: #b2e281;" v-html="msg.ctn"></pre>
               </div>
-              <img :src="msg.avatar" class="msg-avatar msg-avatar-right" @click.stop="handleShowChatterInfo($event, index)" />
+              <img :src="msg.avatar"
+                   class="msg-avatar msg-avatar-right"
+                   @click.stop="handleShowChatterInfo($event, index)" />
             </div>
             <div class="msg-main" v-else>
               <img :src="msg.avatar" class="msg-avatar" @click.stop="handleShowChatterInfo($event, index)" />
@@ -55,23 +57,11 @@ export default {
       return this.$store.state.currentChatId === ''
     },
     isNoMessage () {
-      let isNoMessage = true
-      const currentChatId = this.$store.state.currentChatId
-      for (let chat of this.$store.state.chats) {
-        if (chat.chatId === currentChatId) {
-          isNoMessage = chat.messages.length === 0
-        }
-      }
-      return isNoMessage
+      const { messages } = this.$store.state
+      return messages.length <= 0
     },
     messages () {
-      let messages = ''
-      const currentChatId = this.$store.state.currentChatId
-      for (let chat of this.$store.state.chats) {
-        if (chat.chatId === currentChatId) {
-          messages = chat.messages
-        }
-      }
+      const { messages } = this.$store.state
       return messages
     },
     isShowChatterInfo () {
