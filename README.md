@@ -14,6 +14,7 @@ https://github.com/aiialzy/vue-wechat-web
 
 数据库： mongodb
 
+```
 ├── dist                   编译产物
 ├── node_modules           
 ├── src                    代码编写的目录
@@ -28,5 +29,6 @@ https://github.com/aiialzy/vue-wechat-web
 |   ├── app.module.ts      应用根模块  
 |   └── terminus-options.service   健康度检查
 └── package.json           package 配置
+```
 
 启动方式在server文件夹中的README中有写
