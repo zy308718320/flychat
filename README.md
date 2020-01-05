@@ -32,3 +32,14 @@ https://github.com/aiialzy/vue-wechat-web
 ```
 
 启动方式在server文件夹中的README中有写
+
+建议在开发阶段使用代理的方式访问，whistle是一个非常不错的跨平台代理工具，代理配置如下：
+
+```
+flychat.com/node http://127.0.0.1:3000/node
+flychat.com/docs http://127.0.0.1:3000/docs
+flychat.com/health http://127.0.0.1:3000/health
+flychat.com/images http://127.0.0.1:3000/images
+flychat.com http://127.0.0.1:8081
+```
+在本地就可以通过flychat.com访问了。
